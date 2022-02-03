@@ -5,26 +5,34 @@ import os
 import json
 import time
 import uuid
+import datetime
 import itertools
 
 import appier_console
 
 import ripe
 
-MESSAGE = """To Marina and the QA team and all the other members that sacrifice their time in tasks necessary and that require resilience, you represent the heart and soul of PlatformE.
-Marina two words for you: You rock 🤘"""
+MESSAGE = """To Marina, the QA team and all the other members that sacrifice their time in tasks necessary and that require resilience, you represent the heart and soul of PlatformE.
+Marina two words for you - You rock 🤘
+This tool has been made with ❤️"""
 
 class Marinator(object):
 
     def run(self, path = "downloads"):
         config = self.load_config()
 
-        if not os.path.exists(path):
-            os.makedirs(path)
-
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
         token = config.get("token", "")
+        date_dir = config.get("date_dir", True)
         meta = config.get("meta", {})
+
+        if date_dir:
+            now = datetime.datetime.now()
+            date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
+            path = os.path.join(path, date_string)
+
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         with appier_console.ctx_loader(template = "{{spinner}} Loading") as thread:
             thread.template = "{{spinner}} Logging in to RIPE instance"
@@ -46,8 +54,13 @@ class Marinator(object):
             dimensions_p = list(itertools.product(*dimensions_l))
             dimensions_p.insert(0, None)
 
-            for model in config["models"]:
-                thread.template = "{{spinner}} Creating '%s' orders..." % model
+            models = config["models"]
+
+            for index, model in enumerate(models):
+                numbers = []
+                pdf_paths = []
+
+                thread.template = "{{spinner}} [%d/%d] Creating '%s' orders..." % (index + 1, len(models), model)
 
                 for dimension in dimensions_p:
                     # tries to obtain the name of the color for the
@@ -120,11 +133,49 @@ class Marinator(object):
                     # saves the model PDF with proper naming, respecting the
                     # naming standard of the engraving
                     model_path = os.path.join(path, model_name)
+                    model_path = os.path.abspath(model_path)
                     model_file = open(model_path, "wb")
                     try: model_file.write(order_report)
                     finally: model_file.close()
 
+                    pdf_paths.append(model_path)
+                    numbers.append(order["number"])
+
+                if config.get("remove", True):
+                    for number in numbers: ripe_api.delete_order(number)
+
+                if config.get("join", True):
+                    model_name = "%s.all.pdf" % model
+                    model_path = os.path.join(path, model_name)
+                    model_path = os.path.abspath(model_path)
+                    self.join_pdfs(model_path, pdf_paths)
+
+        print("Finished generating report for %d orders\n" % len(models))
         print(MESSAGE)
+
+    def join_pdfs(self, target_path, source_paths, remove = True):
+        import PyPDF2
+
+        target_file = open(target_path, "wb")
+
+        pdf_files = []
+        try:
+            for source_path in source_paths:
+                pdf_file = open(source_path, "rb")
+                pdf_files.append(pdf_file)
+
+            writer = PyPDF2.PdfFileWriter()
+            for reader in map(PyPDF2.PdfFileReader, pdf_files):
+                for index in range(reader.getNumPages()):
+                    writer.addPage(reader.getPage(index))
+
+            writer.write(target_file)
+        finally:
+            for pdf_file in pdf_files: pdf_file.close()
+            target_file.close()
+
+        if remove:
+            for source_path in source_paths: os.remove(source_path)
 
     def load_config(self, filename = "config.json", encoding = "utf-8"):
         """
