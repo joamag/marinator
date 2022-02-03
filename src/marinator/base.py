@@ -12,13 +12,24 @@ import appier_console
 
 import ripe
 
+VERSION = "0.1.0"
+""" The version number of the Marinator utility
+to be used when printing diagnostics """
+
+LABEL = "marinator/%s" % VERSION
+""" The final composed version of the utility label """
+
 MESSAGE = """To Marina, the QA team and all the other members that sacrifice their time in tasks necessary and that require resilience, you represent the heart and soul of PlatformE.
 Marina two words for you - You rock 🤘
 This tool has been made with ❤️"""
+""" The message that is going to be printed at the
+end of the utility execution """
 
 class Marinator(object):
 
     def run(self, path = "downloads"):
+        print(LABEL)
+
         config = self.load_config()
 
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
@@ -107,7 +118,8 @@ class Marinator(object):
                     # and model parts structure
                     order = ripe_api.import_order(
                         ff_order_id = str(uuid.uuid4()),
-                        contents = json.dumps(contents)
+                        contents = json.dumps(contents),
+                        meta = ["generator:%s" % LABEL, "mood:built with ❤️"]
                     )
 
                     report_base_url = meta.get("report_base_url", None)
@@ -128,7 +140,7 @@ class Marinator(object):
                     if dimension_suffix:
                         model_name = "%s-%s.pdf" % (model, dimension_suffix)
                     else:
-                        model_name = "%s.pdf" % model
+                        model_name = "%s-plain.pdf" % model
 
                     # saves the model PDF with proper naming, respecting the
                     # naming standard of the engraving
@@ -141,11 +153,11 @@ class Marinator(object):
                     pdf_paths.append(model_path)
                     numbers.append(order["number"])
 
-                if config.get("remove", True):
+                if config.get("delete", True):
                     for number in numbers: ripe_api.delete_order(number)
 
                 if config.get("join", True):
-                    model_name = "%s.all.pdf" % model
+                    model_name = "%s.pdf" % model
                     model_path = os.path.join(path, model_name)
                     model_path = os.path.abspath(model_path)
                     self.join_pdfs(model_path, pdf_paths)

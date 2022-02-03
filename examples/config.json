@@ -1,13 +1,12 @@
 {
     "token": "<YOUR_TOKEN>",
     "brand": "<YOUR_BRAND>",
+    "models": ["a", "b"],
+    "delete": false,
+    "join": true,
+    "date_dir": true,
     "dimensions": {
-        "order": ["model", "font", "color"],
-        "model": [
-            "a",
-            "b",
-            "c"
-        ],
+        "order": ["font", "color"],
         "font": [
             "a",
             "b",
