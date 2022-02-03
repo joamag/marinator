@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>git_bot</name>
+	<name>marinator</name>
 	<comment></comment>
 	<projects>
 		<project>appier</project>
-		<project>appier_extras</project>
+		<project>appier_console</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

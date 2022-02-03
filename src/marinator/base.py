@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import json
 import time
+import uuid
 
 import appier
 import appier_console
@@ -14,8 +16,11 @@ Marina two words for you: You rock 🤘"""
 
 class Marinator(object):
 
-    def run(self):
+    def run(self, path = "downloads"):
         config = self.load_config()
+
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
         token = config.get("token", "")
@@ -33,14 +38,42 @@ class Marinator(object):
                 for model in config["models"]:
                     # tries to obtain the name of the color for the
                     # base part that is going to be use in the improt
-                    print(model.rsplit("v", 1))
-                    ripe_api.create_order(dict(
+                    color = model.rsplit("v", 1)[1]
+                    parts = dict(
+                        body = dict(
+                            material = "silk",
+                            color = color
+                        ),
+                        shadow = dict(
+                            material = "default",
+                            color = "default"
+                        )
+                    )
+
+                    contents = dict(
                         brand = config["brand"],
-                        shoe = model
-                    ))
+                        model = model,
+                        parts = parts,
+                        size = config.get("size", 17)
+                    )
+
+                    # creates the order according to the provided brand
+                    # and model parts structure
+                    order = ripe_api.import_order(
+                        ff_order_id = str(uuid.uuid4()),
+                        contents = json.dumps(contents)
+                    )
+
+                    order_report = ripe_api.report_pdf(order["number"])
+
+                    print(order_report)
+
             except Exception as exception:
                 import pprint
-                pprint.pprint(json.loads(exception.read()))
+                if hasattr(exception, "read"):
+                    pprint.pprint(json.loads(exception.read()))
+                else:
+                    print(exception)
 
         print(MESSAGE)
 
