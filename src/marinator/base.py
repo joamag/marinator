@@ -14,6 +14,9 @@ Marina two words for you: You rock 🤘"""
 class Marinator(object):
 
     def run(self):
+        ripe_api = ripe.API()
+        ripe_api.login_pid("asdasda")
+
         with appier_console.ctx_loader(template = "{{spinner}} Processing 3 seconds"):
             time.sleep(3)
 

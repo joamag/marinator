@@ -1,0 +1,22 @@
+{
+    "token": "<YOUR_TOKEN>",
+    "brand": "<YOUR_BRAND>",
+    "dimensions": {
+        "order": ["model", "font", "color"],
+        "model": [
+            "a",
+            "b",
+            "c"
+        ],
+        "font": [
+            "a",
+            "b",
+            "c"
+        ],
+        "color": [
+            "a",
+            "b",
+            "c"
+        ]
+    }
+}

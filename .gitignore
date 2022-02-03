@@ -1,0 +1,5 @@
+*.pyc
+
+session.shelve*
+
+.DS_Store
