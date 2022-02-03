@@ -32,6 +32,8 @@ class Marinator(object):
 
         config = self.load_config()
 
+        brand = config["brand"]
+        models = config["models"]
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
         token = config.get("token", "")
         date_dir = config.get("date_dir", True)
@@ -65,8 +67,6 @@ class Marinator(object):
             dimensions_p = list(itertools.product(*dimensions_l))
             dimensions_p.insert(0, None)
 
-            models = config["models"]
-
             for index, model in enumerate(models):
                 numbers = []
                 pdf_paths = []
@@ -88,20 +88,52 @@ class Marinator(object):
                         )
                     )
 
+                    # in case a valid dimension is defined then we need
+                    # to try to generate the engraving value for the
+                    # dimension, properly validating the same string
                     if dimension:
-                        dimension_suffix = "-".join(dimension)
+                        # obtains the map of properties that can be used
+                        # to validate if the current dimension specification
+                        # is compatible with the current model
+                        config_brand = ripe_api.config_brand(brand, model)
+                        initials = config_brand.get("initials", {})
+                        properties = initials.get("properties", [])
+                        properties_m = self._build_properties_m(properties)
+
+                        properties_valid = True
+
                         engraving_l = []
                         for index, dimension_part in enumerate(dimension):
-                            engraving_l.append("%s:%s" % (dimension_part, dimensions_order[index]))
+                            dimension_name = dimensions_order[index]
+
+                            # creates the new engraving partial element and adds it to
+                            # the list that is going to be used in the engraving label generation
+                            engraving_l.append("%s:%s" % (dimension_part, dimension_name))
+
+                            # in case the current dimension part is not defined in the
+                            # properties definition, then we must skip the current
+                            # order import as it's considered invalid
+                            if not dimension_part in properties_m.get(dimension_name, []):
+                                properties_valid = False
+                                continue
+
+                        # in case the properties are considered to be not valid
+                        # meaning that at least of the dimension value is not
+                        # present in the model's initials properties definition
+                        # then we must skip the current iteration to avoid the
+                        # generation of an invalid engraving value for the order
+                        if not properties_valid: continue
+
                         engraving_s = ".".join(engraving_l)
+                        dimension_suffix = "-".join(dimension)
                     else:
-                        dimension_suffix = None
                         engraving_s = None
+                        dimension_suffix = None
 
                     # creates the contents dictionary that is going to be used
                     # as the basis for the import order operation
                     contents = dict(
-                        brand = config["brand"],
+                        brand = brand,
                         model = model,
                         parts = parts,
                         size = config.get("size", 17)
@@ -210,6 +242,14 @@ class Marinator(object):
         data = data.decode(encoding)
         data_j = json.loads(data)
         return data_j
+
+    def _build_properties_m(self, properties):
+        properties_m = dict()
+        for property in properties:
+            sequence = properties_m.get(property["type"], [])
+            sequence.append(property["name"])
+            properties_m[property["type"]] = sequence
+        return properties_m
 
 if __name__ == "__main__":
     marinator = Marinator()
