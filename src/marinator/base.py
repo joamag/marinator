@@ -5,6 +5,7 @@ import os
 import json
 import time
 import uuid
+import itertools
 
 import appier_console
 
@@ -33,53 +34,95 @@ class Marinator(object):
             thread.template = "{{spinner}} Running a small sleep"
             time.sleep(0)
 
-            thread.template = "{{spinner}} Creating orders..."
+            thread.template = "{{spinner}} Starting order creation..."
+
+            dimensions = config.get("dimensions", {})
+            dimensions_order = dimensions.get("order", [])
+            dimensions_l = []
+            for name in dimensions_order:
+                dimension = dimensions[name]
+                dimensions_l.append(dimension)
+
+            dimensions_p = list(itertools.product(*dimensions_l))
+            dimensions_p.insert(0, None)
+
             for model in config["models"]:
-                # tries to obtain the name of the color for the
-                # base part that is going to be use in the improt
-                color = model.rsplit("v", 1)[1]
-                parts = dict(
-                    body = dict(
-                        material = "silk",
-                        color = color
-                    ),
-                    shadow = dict(
-                        material = "default",
-                        color = "default"
-                    )
-                )
+                thread.template = "{{spinner}} Creating '%s' orders..." % model
 
-                contents = dict(
-                    brand = config["brand"],
-                    model = model,
-                    parts = parts,
-                    size = config.get("size", 17)
-                )
-
-                # creates the order according to the provided brand
-                # and model parts structure
-                order = ripe_api.import_order(
-                    ff_order_id = str(uuid.uuid4()),
-                    contents = json.dumps(contents)
-                )
-
-                report_base_url = meta.get("report_base_url", None)
-                if report_base_url:
-                    secret_key = meta["secret_key"]
-                    environment = meta.get("environment", "ripe-core-sbx")
-                    repor_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
-                        (report_base_url, order["number"], environment, secret_key)
-                    ripe_api.update_report_url_order(
-                        order["number"],
-                        repor_url
+                for dimension in dimensions_p:
+                    # tries to obtain the name of the color for the
+                    # base part that is going to be use in the import
+                    color = model.rsplit("v", 1)[1]
+                    parts = dict(
+                        body = dict(
+                            material = "silk",
+                            color = color
+                        ),
+                        shadow = dict(
+                            material = "default",
+                            color = "default"
+                        )
                     )
 
-                order_report = ripe_api.report_pdf(order["number"], order["key"])
+                    if dimension:
+                        dimension_suffix = "-".join(dimension)
+                        engraving_l = []
+                        for index, dimension_part in enumerate(dimension):
+                            engraving_l.append("%s:%s" % (dimension_part, dimensions_order[index]))
+                        engraving_s = ".".join(engraving_l)
+                    else:
+                        dimension_suffix = None
+                        engraving_s = None
 
-                model_path = os.path.join(path, "%s.pdf" % model)
-                model_file = open(model_path, "wb")
-                try: model_file.write(order_report)
-                finally: model_file.close()
+                    # creates the contents dictionary that is going to be used
+                    # as the basis for the import order operation
+                    contents = dict(
+                        brand = config["brand"],
+                        model = model,
+                        parts = parts,
+                        size = config.get("size", 17)
+                    )
+
+                    # in case a valid engraving value is found (proper dimension
+                    # is being read), then sets both the initials and the engraving
+                    # values in the contents to generate proper order with initials
+                    if engraving_s:
+                        contents["initials"] = meta.get("initials", "Hello World")
+                        contents["engraving"] = engraving_s
+
+                    # creates the order according to the provided brand
+                    # and model parts structure
+                    order = ripe_api.import_order(
+                        ff_order_id = str(uuid.uuid4()),
+                        contents = json.dumps(contents)
+                    )
+
+                    report_base_url = meta.get("report_base_url", None)
+                    if report_base_url:
+                        secret_key = meta["secret_key"]
+                        environment = meta.get("environment", "ripe-core-sbx")
+                        report_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
+                            (report_base_url, order["number"], environment, secret_key)
+                        ripe_api.update_report_url_order(
+                            order["number"],
+                            report_url
+                        )
+
+                    # obtains the PDF contents for the report of the current
+                    # order in iteration to latter save them
+                    order_report = ripe_api.report_pdf(order["number"], order["key"])
+
+                    if dimension_suffix:
+                        model_name = "%s-%s.pdf" % (model, dimension_suffix)
+                    else:
+                        model_name = "%s.pdf" % model
+
+                    # saves the model PDF with proper naming, respecting the
+                    # naming standard of the engraving
+                    model_path = os.path.join(path, model_name)
+                    model_file = open(model_path, "wb")
+                    try: model_file.write(order_report)
+                    finally: model_file.close()
 
         print(MESSAGE)
 
