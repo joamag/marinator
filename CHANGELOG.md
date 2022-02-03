@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Initial version of the bot
-* Support for PDF join operation
+*
 
 ### Changed
 
@@ -19,3 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 *
+
+## [0.1.0] - 2020-02-03
+
+### Added
+
+* Initial version of the bot
+* Support for PDF join operation
+* Support for engraving to properties validation
