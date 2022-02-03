@@ -26,12 +26,16 @@ class Marinator(object):
             ripe_api.login_pid(token)
         
             thread.template = "{{spinner}} Running a small sleep"
-            time.sleep(3)
+            time.sleep(0)
 
-            thread.template = "{{spinner}} Creating orders..."
-            ripe_api.create_order(dict(
+            try:
+                thread.template = "{{spinner}} Creating orders..."
+                ripe_api.create_order(dict(
 
-            ))
+                ))
+            except Exception as exception:
+                print(exception.read())
+                
 
         print(MESSAGE)
 
