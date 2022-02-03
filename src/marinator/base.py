@@ -24,18 +24,23 @@ class Marinator(object):
             thread.template = "{{spinner}} Logging in to RIPE instance"
             ripe_api = ripe.API(base_url = base_url)
             ripe_api.login_pid(token)
-        
+
             thread.template = "{{spinner}} Running a small sleep"
             time.sleep(0)
 
             try:
                 thread.template = "{{spinner}} Creating orders..."
-                ripe_api.create_order(dict(
-
-                ))
+                for model in config["models"]:
+                    # tries to obtain the name of the color for the
+                    # base part that is going to be use in the improt
+                    print(model.rsplit("v", 1))
+                    ripe_api.create_order(dict(
+                        brand = config["brand"],
+                        shoe = model
+                    ))
             except Exception as exception:
-                print(exception.read())
-                
+                import pprint
+                pprint.pprint(json.loads(exception.read()))
 
         print(MESSAGE)
 
