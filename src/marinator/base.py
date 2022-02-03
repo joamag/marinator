@@ -119,7 +119,7 @@ class Marinator(object):
                     order = ripe_api.import_order(
                         ff_order_id = str(uuid.uuid4()),
                         contents = json.dumps(contents),
-                        meta = ["generator:%s" % LABEL, "mood:built with ❤️"]
+                        meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
                     )
 
                     report_base_url = meta.get("report_base_url", None)
