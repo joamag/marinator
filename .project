@@ -5,6 +5,7 @@
 	<projects>
 		<project>appier</project>
 		<project>appier_console</project>
+		<project>ripe-api</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

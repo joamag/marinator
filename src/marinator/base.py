@@ -6,7 +6,6 @@ import json
 import time
 import uuid
 
-import appier
 import appier_console
 
 import ripe
@@ -24,6 +23,7 @@ class Marinator(object):
 
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
         token = config.get("token", "")
+        meta = config.get("meta", {})
 
         with appier_console.ctx_loader(template = "{{spinner}} Loading") as thread:
             thread.template = "{{spinner}} Logging in to RIPE instance"
@@ -33,47 +33,53 @@ class Marinator(object):
             thread.template = "{{spinner}} Running a small sleep"
             time.sleep(0)
 
-            try:
-                thread.template = "{{spinner}} Creating orders..."
-                for model in config["models"]:
-                    # tries to obtain the name of the color for the
-                    # base part that is going to be use in the improt
-                    color = model.rsplit("v", 1)[1]
-                    parts = dict(
-                        body = dict(
-                            material = "silk",
-                            color = color
-                        ),
-                        shadow = dict(
-                            material = "default",
-                            color = "default"
-                        )
+            thread.template = "{{spinner}} Creating orders..."
+            for model in config["models"]:
+                # tries to obtain the name of the color for the
+                # base part that is going to be use in the improt
+                color = model.rsplit("v", 1)[1]
+                parts = dict(
+                    body = dict(
+                        material = "silk",
+                        color = color
+                    ),
+                    shadow = dict(
+                        material = "default",
+                        color = "default"
+                    )
+                )
+
+                contents = dict(
+                    brand = config["brand"],
+                    model = model,
+                    parts = parts,
+                    size = config.get("size", 17)
+                )
+
+                # creates the order according to the provided brand
+                # and model parts structure
+                order = ripe_api.import_order(
+                    ff_order_id = str(uuid.uuid4()),
+                    contents = json.dumps(contents)
+                )
+
+                report_base_url = meta.get("report_base_url", None)
+                if report_base_url:
+                    secret_key = meta["secret_key"]
+                    environment = meta.get("environment", "ripe-core-sbx")
+                    repor_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
+                        (report_base_url, order["number"], environment, secret_key)
+                    ripe_api.update_report_url_order(
+                        order["number"],
+                        repor_url
                     )
 
-                    contents = dict(
-                        brand = config["brand"],
-                        model = model,
-                        parts = parts,
-                        size = config.get("size", 17)
-                    )
+                order_report = ripe_api.report_pdf(order["number"], order["key"])
 
-                    # creates the order according to the provided brand
-                    # and model parts structure
-                    order = ripe_api.import_order(
-                        ff_order_id = str(uuid.uuid4()),
-                        contents = json.dumps(contents)
-                    )
-
-                    order_report = ripe_api.report_pdf(order["number"])
-
-                    print(order_report)
-
-            except Exception as exception:
-                import pprint
-                if hasattr(exception, "read"):
-                    pprint.pprint(json.loads(exception.read()))
-                else:
-                    print(exception)
+                model_path = os.path.join(path, "%s.pdf" % model)
+                model_file = open(model_path, "wb")
+                try: model_file.write(order_report)
+                finally: model_file.close()
 
         print(MESSAGE)
 
