@@ -3,3 +3,5 @@
 session.shelve*
 
 .DS_Store
+
+/config.json
