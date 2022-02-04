@@ -32,7 +32,7 @@ end of the utility execution """
 class Marinator(object):
 
     def run(self, path = "downloads"):
-        print(LABEL)
+        print(LABEL_FULL)
 
         config = self.load_config()
 
