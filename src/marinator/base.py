@@ -19,7 +19,11 @@ to be used when printing diagnostics """
 LABEL = "marinator/%s" % VERSION
 """ The final composed version of the utility label """
 
-MESSAGE = """To Marina, the QA team and all the other members that spend a significant amount of their time in tasks that are necessary and that require extreme resilience, you represent the heart and soul of PlatformE.
+LABEL_FULL = "%s - The power of Marina to everyone"
+""" The complete version of the label including a simple
+sub-title element """
+
+MESSAGE = """To Marina, the QA team and all the other members that invest a significant amount of their time in tasks that are necessary and that require extreme resilience, my deppest appreciation, you represent the heart and soul of PlatformE.
 Marina two words for you - You rock 🤘
 This tool has been made with ❤️"""
 """ The message that is going to be printed at the
@@ -48,6 +52,8 @@ class Marinator(object):
             now = datetime.datetime.now()
             date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
             path = os.path.join(path, date_string)
+
+        path = os.path.abspath(path)
 
         if not os.path.exists(path):
             os.makedirs(path)
@@ -133,7 +139,7 @@ class Marinator(object):
                         dimension_suffix = "-".join(dimension)
                     else:
                         engraving_s = None
-                        dimension_suffix = None
+                        dimension_suffix = "plain"
 
                     # creates the contents dictionary that is going to be used
                     # as the basis for the import order operation
@@ -174,13 +180,9 @@ class Marinator(object):
                     # order in iteration to latter save them
                     order_report = ripe_api.report_pdf(order["number"], order["key"])
 
-                    if dimension_suffix:
-                        model_name = "%s-%s.pdf" % (model, dimension_suffix)
-                    else:
-                        model_name = "%s-plain.pdf" % model
-
                     # saves the model PDF with proper naming, respecting the
                     # naming standard of the engraving
+                    model_name = "%s-%s.pdf" % (model, dimension_suffix)
                     model_path = os.path.join(path, model_name)
                     model_path = os.path.abspath(model_path)
                     model_file = open(model_path, "wb")
@@ -199,7 +201,7 @@ class Marinator(object):
                     model_path = os.path.abspath(model_path)
                     self.join_pdfs(model_path, pdf_paths)
 
-        print("Finished generating report for %d orders\n" % len(models))
+        print("Finished generating reports for %d orders in %s\n" % (len(models), path))
         print(MESSAGE)
 
     def join_pdfs(self, target_path, source_paths, remove = True):
