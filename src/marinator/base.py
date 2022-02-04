@@ -39,6 +39,11 @@ class Marinator(object):
         date_dir = config.get("date_dir", True)
         meta = config.get("meta", {})
 
+        # extracts some of the configuration options
+        # that can be used to control the util behaviour
+        delete = config.get("delete", True)
+        join = config.get("join", True)
+
         if date_dir:
             now = datetime.datetime.now()
             date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
@@ -185,10 +190,10 @@ class Marinator(object):
                     pdf_paths.append(model_path)
                     numbers.append(order["number"])
 
-                if config.get("delete", True):
+                if delete:
                     for number in numbers: ripe_api.delete_order(number)
 
-                if config.get("join", True):
+                if join:
                     model_name = "%s.pdf" % model
                     model_path = os.path.join(path, model_name)
                     model_path = os.path.abspath(model_path)
