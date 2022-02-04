@@ -19,7 +19,7 @@ to be used when printing diagnostics """
 LABEL = "marinator/%s" % VERSION
 """ The final composed version of the utility label """
 
-MESSAGE = """To Marina, the QA team and all the other members that sacrifice their time in tasks necessary and that require resilience, you represent the heart and soul of PlatformE.
+MESSAGE = """To Marina, the QA team and all the other members that spend a significant amount of their time in tasks that are necessary and that require extreme resilience, you represent the heart and soul of PlatformE.
 Marina two words for you - You rock 🤘
 This tool has been made with ❤️"""
 """ The message that is going to be printed at the
