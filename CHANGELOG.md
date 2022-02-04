@@ -13,11 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* Added support for the `__main__.py` module structure
+*
 
 ### Fixed
 
 *
+
+## [0.1.3] - 2020-02-04
+
+### Changed
+
+* Added support for the `__main__.py` module structure
 
 ## [0.1.2] - 2020-02-04
 
