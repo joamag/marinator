@@ -19,7 +19,7 @@ to be used when printing diagnostics """
 LABEL = "marinator/%s" % VERSION
 """ The final composed version of the utility label """
 
-LABEL_FULL = "%s - The power of Marina to everyone 🤖"
+LABEL_FULL = "%s - The power of Marina to everyone 🤖" % LABEL
 """ The complete version of the label including a simple
 sub-title element """
 
