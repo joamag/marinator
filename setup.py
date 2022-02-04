@@ -23,7 +23,8 @@ setuptools.setup(
     install_requires = [
         "appier",
         "appier_console",
-        "ripe_api"
+        "ripe_api",
+        "PyPDF2"
     ],
     classifiers = [
         "Development Status :: 5 - Production/Stable",
