@@ -13,11 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* New `README.md` support
+*
 
 ### Fixed
 
 *
+
+## [0.2.1] - 2020-02-05
+
+### Changed
+
+* New `README.md` support
 
 ## [0.2.0] - 2020-02-05
 

@@ -6,7 +6,7 @@ import setuptools
 
 setuptools.setup(
     name = "marinator",
-    version = "0.2.0",
+    version = "0.2.1",
     author = "João Magalhães",
     author_email = "joamag@gmail.com",
     description = "The power of a Marina for everyone",
