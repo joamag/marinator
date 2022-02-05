@@ -9,15 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+*
+
+### Changed
+
+*
+
+### Fixed
+
+*
+
+## [0.2.0] - 2020-02-05
+
+### Added
+
 * Support for custom handler in `config.json`
 
 ### Changed
 
 * Made validation of dimensions a separate method
-
-### Fixed
-
-*
 
 ## [0.1.5] - 2020-02-04
 
