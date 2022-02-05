@@ -2,6 +2,13 @@
 
 The power of a Marina for everyone.
 
+## Execution
+
+```bash
+pip install --upgrade marinator
+python -m marinator
+```
+
 ## License
 
 Marinator is currently licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/).
