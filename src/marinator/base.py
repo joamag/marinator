@@ -41,6 +41,7 @@ class Marinator(object):
         base_url = config.get("base_url", "https://ripe-core-sbx.platforme.com/api/")
         token = config.get("token", "")
         date_dir = config.get("date_dir", True)
+        handlers = config.get("handlers", [])
         meta = config.get("meta", {})
 
         # extracts some of the configuration options
@@ -48,25 +49,29 @@ class Marinator(object):
         delete = config.get("delete", True)
         join = config.get("join", True)
 
+        # adds the name of the brand as a valid handler, taking
+        # into consideration that if the handler does not exist
+        # a gracefull handling of the error will occur
+        handlers.append(brand)
+        handlers = set(handlers)
+
         if date_dir:
             now = datetime.datetime.now()
             date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
             path = os.path.join(path, date_string)
 
         path = os.path.abspath(path)
-
-        if not os.path.exists(path):
-            os.makedirs(path)
+        if not os.path.exists(path): os.makedirs(path)
 
         with appier_console.ctx_loader(template = "{{spinner}} Loading") as thread:
-            thread.template = "{{spinner}} Logging in to RIPE instance"
+            thread.set_template("{{spinner}} Logging in to RIPE instance")
             ripe_api = ripe.API(base_url = base_url)
             ripe_api.login_pid(token)
 
-            thread.template = "{{spinner}} Running a small sleep"
+            thread.set_template("{{spinner}} Running a small sleep")
             time.sleep(0)
 
-            thread.template = "{{spinner}} Starting order creation..."
+            thread.set_template("{{spinner}} Starting order creation...")
 
             dimensions = config.get("dimensions", {})
             dimensions_order = dimensions.get("order", [])
@@ -75,6 +80,9 @@ class Marinator(object):
                 dimension = dimensions[name]
                 dimensions_l.append(dimension)
 
+            # builds the complete set of dimensions permutations from the
+            # list of dimensions and then adds the "special" empty case
+            # to the beggining of the sequence
             dimensions_p = list(itertools.product(*dimensions_l))
             dimensions_p.insert(0, None)
 
@@ -82,9 +90,9 @@ class Marinator(object):
                 numbers = []
                 pdf_paths = []
 
-                thread.template = "{{spinner}} [%d/%d] Creating '%s' orders..." % (index + 1, len(models), model)
+                thread.set_template("{{spinner}} [%d/%d] Creating '%s' orders..." % (index + 1, len(models), model))
 
-                for dimension in dimensions_p:
+                for dimension_p in dimensions_p:
                     # tries to obtain the name of the color for the
                     # base part that is going to be use in the import
                     color = model.rsplit("v", 1)[1]
@@ -102,7 +110,7 @@ class Marinator(object):
                     # in case a valid dimension is defined then we need
                     # to try to generate the engraving value for the
                     # dimension, properly validating the same string
-                    if dimension:
+                    if dimension_p:
                         # obtains the map of properties that can be used
                         # to validate if the current dimension specification
                         # is compatible with the current model
@@ -111,32 +119,29 @@ class Marinator(object):
                         properties = initials.get("properties", [])
                         properties_m = self._build_properties_m(properties)
 
-                        properties_valid = True
-
-                        engraving_l = []
-                        for index, dimension_part in enumerate(dimension):
-                            dimension_name = dimensions_order[index]
-
-                            # creates the new engraving partial element and adds it to
-                            # the list that is going to be used in the engraving label generation
-                            engraving_l.append("%s:%s" % (dimension_part, dimension_name))
-
-                            # in case the current dimension part is not defined in the
-                            # properties definition, then we must skip the current
-                            # order import as it's considered invalid
-                            if not dimension_part in properties_m.get(dimension_name, []):
-                                properties_valid = False
-                                continue
-
                         # in case the properties are considered to be not valid
                         # meaning that at least of the dimension value is not
                         # present in the model's initials properties definition
                         # then we must skip the current iteration to avoid the
                         # generation of an invalid engraving value for the order
-                        if not properties_valid: continue
+                        if not self._validate_dimension(dimension_p, dimensions_order, properties_m):
+                            continue
+
+                        # iterates over the complete set of dimension permutation
+                        # elements to build the engraving string list
+                        engraving_l = []
+                        for index, dimension_value in enumerate(dimension_p):
+                            # using the current index in iteration to obtain the name of the
+                            # dimension currently in iteration, and be able to construct
+                            # the engraving part corresponding to the current dimension
+                            dimension_name = dimensions_order[index]
+
+                            # creates the new engraving partial element and adds it to
+                            # the list that is going to be used in the engraving label generation
+                            engraving_l.append("%s:%s" % (dimension_value, dimension_name))
 
                         engraving_s = ".".join(engraving_l)
-                        dimension_suffix = "-".join(dimension)
+                        dimension_suffix = "-".join(dimension_p)
                     else:
                         engraving_s = None
                         dimension_suffix = "plain"
@@ -165,16 +170,13 @@ class Marinator(object):
                         meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
                     )
 
-                    report_base_url = meta.get("report_base_url", None)
-                    if report_base_url:
-                        secret_key = meta["secret_key"]
-                        environment = meta.get("environment", "ripe-core-sbx")
-                        report_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
-                            (report_base_url, order["number"], environment, secret_key)
-                        ripe_api.update_report_url_order(
-                            order["number"],
-                            report_url
-                        )
+                    # iterates over the complete set of handlers expected to
+                    # be executed for the current order and runs them
+                    for handler in handlers:
+                        handler_name = "_handle_%s" % handler
+                        if not hasattr(self, handler_name): continue
+                        handler_method = getattr(self, handler_name)
+                        handler_method(ripe_api, config = config, order = order)
 
                     # obtains the PDF contents for the report of the current
                     # order in iteration to latter save them
@@ -250,6 +252,43 @@ class Marinator(object):
         data_j = json.loads(data)
         return data_j
 
+    def _validate_dimension(self, dimension_p, dimensions_order, properties_m):
+        """
+        Makes sure that the current dimension in iteration is valid
+        for the model in question.
+
+        This verification is done by validating the dimension against
+        the properties section of the model's config.
+
+        :type dimension_p: List
+        :param dimension_p: The dimension permutation that is going to be used
+        fore the validation process.
+        :type dimensions_order: List
+        :param dimensions_order: The sequence that defines the order from which
+        the dimension should be defined.
+        :type properties_m: Dictionary
+        :param properties_m: The map that contains the complete set of
+        properties for the model, the provided dimension permutation is
+        going to be validated "against" it.
+        :rtype: bool
+        :return: If the provided dimension permutation is valid according
+        to the provided properties map.
+        """
+
+        for index, dimension_value in enumerate(dimension_p):
+            # using the current index in iteration to obtain the name of the
+            # dimension currently in iteration, and be able to construct
+            # the engraving part corresponding to the current dimension
+            dimension_name = dimensions_order[index]
+
+            # in case the current dimension value is not defined in the
+            # properties definition, then we must skip the current
+            # order import as it's considered invalid
+            if not dimension_value in properties_m.get(dimension_name, []):
+                return False
+
+        return True
+
     def _build_properties_m(self, properties):
         properties_m = dict()
         for property in properties:
@@ -257,6 +296,19 @@ class Marinator(object):
             sequence.append(property["name"])
             properties_m[property["type"]] = sequence
         return properties_m
+
+    def _handle_hermes(self, ripe_api, config = {}, order = {}):
+        meta = config.get("meta", {})
+        report_base_url = meta.get("report_base_url", None)
+        secret_key = meta.get("secret_key", None)
+        environment = meta.get("environment", "ripe-core-sbx")
+        if report_base_url and secret_key:
+            report_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
+                (report_base_url, order["number"], environment, secret_key)
+            ripe_api.update_report_url_order(
+                order["number"],
+                report_url
+            )
 
 if __name__ == "__main__":
     marinator = Marinator()

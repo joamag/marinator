@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-*
+* Support for custom handler in `config.json`
 
 ### Changed
 
-*
+* Made validation of dimensions a separate method
 
 ### Fixed
 
