@@ -8,6 +8,7 @@ import uuid
 import datetime
 import itertools
 
+import appier
 import appier_console
 
 import ripe
@@ -162,13 +163,17 @@ class Marinator(object):
                         contents["initials"] = meta.get("initials", "Hello World")
                         contents["engraving"] = engraving_s
 
-                    # creates the order according to the provided brand
-                    # and model parts structure
-                    order = ripe_api.import_order(
-                        ff_order_id = str(uuid.uuid4()),
-                        contents = json.dumps(contents),
-                        meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
-                    )
+                    try:
+                        # creates the order according to the provided brand
+                        # and model parts structure
+                        order = ripe_api.import_order(
+                            ff_order_id = str(uuid.uuid4()),
+                            contents = json.dumps(contents),
+                            meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
+                        )
+                    except appier.HTTPError as exception:
+                        print("Exception - %s" % str(exception))
+                        continue
 
                     # iterates over the complete set of handlers expected to
                     # be executed for the current order and runs them
