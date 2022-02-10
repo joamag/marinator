@@ -13,11 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* More exception verbosity for import order
+*
 
 ### Fixed
 
 *
+
+## [0.2.2] - 2020-02-10
+
+### Changed
+
+* More exception verbosity for import order
 
 ## [0.2.1] - 2020-02-05
 
