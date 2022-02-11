@@ -115,7 +115,11 @@ class Marinator(object):
                         # obtains the map of properties that can be used
                         # to validate if the current dimension specification
                         # is compatible with the current model
-                        config_brand = ripe_api.config_brand(brand, model)
+                        try:
+                            config_brand = ripe_api.config_brand(brand, model)
+                        except appier.HTTPError as exception:
+                            self._handle_exception(exception)
+                            continue
                         initials = config_brand.get("initials", {})
                         properties = initials.get("properties", [])
                         properties_m = self._build_properties_m(properties)
@@ -172,7 +176,7 @@ class Marinator(object):
                             meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
                         )
                     except appier.HTTPError as exception:
-                        print("Exception - %s" % str(exception))
+                        self._handle_exception(exception)
                         continue
 
                     # iterates over the complete set of handlers expected to
@@ -185,7 +189,11 @@ class Marinator(object):
 
                     # obtains the PDF contents for the report of the current
                     # order in iteration to latter save them
-                    order_report = ripe_api.report_pdf(order["number"], order["key"])
+                    try:
+                        order_report = ripe_api.report_pdf(order["number"], order["key"])
+                    except appier.HTTPError as exception:
+                        self._handle_exception(exception)
+                        continue
 
                     # saves the model PDF with proper naming, respecting the
                     # naming standard of the engraving
@@ -314,6 +322,9 @@ class Marinator(object):
                 order["number"],
                 report_url
             )
+
+    def _handle_exception(self, exception):
+        print("Exception - %s" % str(exception))
 
 if __name__ == "__main__":
     marinator = Marinator()
