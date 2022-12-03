@@ -22,7 +22,7 @@ setuptools.setup(
     },
     install_requires = [
         "appier",
-        "appier_console",
+        "appier-console",
         "ripe_api",
         "PyPDF2"
     ],
