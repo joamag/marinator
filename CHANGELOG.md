@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 *
 
+## [0.2.6] - 2020-12-05
+
+### Fixed
+
+* Deploy CI issue in GitHub Actions
+
 ## [0.2.5] - 2020-12-05
 
 ### Fixed

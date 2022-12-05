@@ -13,7 +13,7 @@ import appier_console
 
 import ripe
 
-VERSION = "0.2.5"
+VERSION = "0.2.6"
 """ The version number of the Marinator utility
 to be used when printing diagnostics """
 
