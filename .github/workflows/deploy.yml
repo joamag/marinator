@@ -19,7 +19,7 @@ jobs:
       - run: |
           pip install black
           black . --check
-        if: matrix.python-version != '2.7'
+        if: matrix.python-version != '2.7' && matrix.python-version != '3.5'
       - run: pip install twine wheel
       - run: python setup.py sdist bdist_wheel
       - run: python -m twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*

@@ -15,5 +15,5 @@ jobs:
       - run: |
           pip install black
           black . --check
-        if: matrix.python-version != '2.7'
+        if: matrix.python-version != '2.7' && matrix.python-version != '3.5'
       - run: python setup.py test
