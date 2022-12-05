@@ -5,4 +5,8 @@ session.shelve*
 .DS_Store
 
 /config.json
+
+/dist
+/build
 /downloads
+/src/marinator.egg-info
