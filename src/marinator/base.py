@@ -30,9 +30,9 @@ This tool has been made with ❤️"""
 """ The message that is going to be printed at the
 end of the utility execution """
 
-class Marinator(object):
 
-    def run(self, path = "downloads"):
+class Marinator(object):
+    def run(self, path="downloads"):
         print(LABEL_FULL)
 
         config = self.load_config()
@@ -52,7 +52,7 @@ class Marinator(object):
 
         # adds the name of the brand as a valid handler, taking
         # into consideration that if the handler does not exist
-        # a gracefull handling of the error will occur
+        # a graceful handling of the error will occur
         handlers.append(brand)
         handlers = set(handlers)
 
@@ -62,11 +62,12 @@ class Marinator(object):
             path = os.path.join(path, date_string)
 
         path = os.path.abspath(path)
-        if not os.path.exists(path): os.makedirs(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-        with appier_console.ctx_loader(template = "{{spinner}} Loading") as thread:
+        with appier_console.ctx_loader(template="{{spinner}} Loading") as thread:
             thread.set_template("{{spinner}} Logging in to RIPE instance")
-            ripe_api = ripe.API(base_url = base_url)
+            ripe_api = ripe.API(base_url=base_url)
             ripe_api.login_pid(token)
 
             thread.set_template("{{spinner}} Running a small sleep")
@@ -91,21 +92,18 @@ class Marinator(object):
                 numbers = []
                 pdf_paths = []
 
-                thread.set_template("{{spinner}} [%d/%d] Creating '%s' orders..." % (index + 1, len(models), model))
+                thread.set_template(
+                    "{{spinner}} [%d/%d] Creating '%s' orders..."
+                    % (index + 1, len(models), model)
+                )
 
                 for dimension_p in dimensions_p:
                     # tries to obtain the name of the color for the
                     # base part that is going to be use in the import
                     color = model.rsplit("v", 1)[1]
                     parts = dict(
-                        body = dict(
-                            material = "silk",
-                            color = color
-                        ),
-                        shadow = dict(
-                            material = "default",
-                            color = "default"
-                        )
+                        body=dict(material="silk", color=color),
+                        shadow=dict(material="default", color="default"),
                     )
 
                     # in case a valid dimension is defined then we need
@@ -129,7 +127,9 @@ class Marinator(object):
                         # present in the model's initials properties definition
                         # then we must skip the current iteration to avoid the
                         # generation of an invalid engraving value for the order
-                        if not self._validate_dimension(dimension_p, dimensions_order, properties_m):
+                        if not self._validate_dimension(
+                            dimension_p, dimensions_order, properties_m
+                        ):
                             continue
 
                         # iterates over the complete set of dimension permutation
@@ -143,7 +143,9 @@ class Marinator(object):
 
                             # creates the new engraving partial element and adds it to
                             # the list that is going to be used in the engraving label generation
-                            engraving_l.append("%s:%s" % (dimension_value, dimension_name))
+                            engraving_l.append(
+                                "%s:%s" % (dimension_value, dimension_name)
+                            )
 
                         engraving_s = ".".join(engraving_l)
                         dimension_suffix = "-".join(dimension_p)
@@ -154,10 +156,10 @@ class Marinator(object):
                     # creates the contents dictionary that is going to be used
                     # as the basis for the import order operation
                     contents = dict(
-                        brand = brand,
-                        model = model,
-                        parts = parts,
-                        size = config.get("size", 17)
+                        brand=brand,
+                        model=model,
+                        parts=parts,
+                        size=config.get("size", 17),
                     )
 
                     # in case a valid engraving value is found (proper dimension
@@ -171,9 +173,9 @@ class Marinator(object):
                         # creates the order according to the provided brand
                         # and model parts structure
                         order = ripe_api.import_order(
-                            ff_order_id = str(uuid.uuid4()),
-                            contents = json.dumps(contents),
-                            meta = ["generator:%s" % LABEL, "mood:Built with ❤️"]
+                            ff_order_id=str(uuid.uuid4()),
+                            contents=json.dumps(contents),
+                            meta=["generator:%s" % LABEL, "mood:Built with ❤️"],
                         )
                     except appier.HTTPError as exception:
                         self._handle_exception(exception)
@@ -183,14 +185,17 @@ class Marinator(object):
                     # be executed for the current order and runs them
                     for handler in handlers:
                         handler_name = "_handle_%s" % handler
-                        if not hasattr(self, handler_name): continue
+                        if not hasattr(self, handler_name):
+                            continue
                         handler_method = getattr(self, handler_name)
-                        handler_method(ripe_api, config = config, order = order)
+                        handler_method(ripe_api, config=config, order=order)
 
                     # obtains the PDF contents for the report of the current
                     # order in iteration to latter save them
                     try:
-                        order_report = ripe_api.report_pdf(order["number"], order["key"])
+                        order_report = ripe_api.report_pdf(
+                            order["number"], order["key"]
+                        )
                     except appier.HTTPError as exception:
                         self._handle_exception(exception)
                         continue
@@ -201,14 +206,17 @@ class Marinator(object):
                     model_path = os.path.join(path, model_name)
                     model_path = os.path.abspath(model_path)
                     model_file = open(model_path, "wb")
-                    try: model_file.write(order_report)
-                    finally: model_file.close()
+                    try:
+                        model_file.write(order_report)
+                    finally:
+                        model_file.close()
 
                     pdf_paths.append(model_path)
                     numbers.append(order["number"])
 
                 if delete:
-                    for number in numbers: ripe_api.delete_order(number)
+                    for number in numbers:
+                        ripe_api.delete_order(number)
 
                 if join:
                     model_name = "%s.pdf" % model
@@ -219,7 +227,7 @@ class Marinator(object):
         print("Finished generating reports for %d orders in %s\n" % (len(models), path))
         print(MESSAGE)
 
-    def join_pdfs(self, target_path, source_paths, remove = True):
+    def join_pdfs(self, target_path, source_paths, remove=True):
         import PyPDF2
 
         target_file = open(target_path, "wb")
@@ -237,13 +245,15 @@ class Marinator(object):
 
             writer.write(target_file)
         finally:
-            for pdf_file in pdf_files: pdf_file.close()
+            for pdf_file in pdf_files:
+                pdf_file.close()
             target_file.close()
 
         if remove:
-            for source_path in source_paths: os.remove(source_path)
+            for source_path in source_paths:
+                os.remove(source_path)
 
-    def load_config(self, filename = "config.json", encoding = "utf-8"):
+    def load_config(self, filename="config.json", encoding="utf-8"):
         """
         Loads the configuration using the name of the file provided
         as parameter, assumes that the structure is JSON compatible.
@@ -259,8 +269,10 @@ class Marinator(object):
         """
 
         file = open(filename, "rb")
-        try: data = file.read()
-        finally: file.close()
+        try:
+            data = file.read()
+        finally:
+            file.close()
         data = data.decode(encoding)
         data_j = json.loads(data)
         return data_j
@@ -310,21 +322,23 @@ class Marinator(object):
             properties_m[property["type"]] = sequence
         return properties_m
 
-    def _handle_hermes(self, ripe_api, config = {}, order = {}):
+    def _handle_hermes(self, ripe_api, config={}, order={}):
         meta = config.get("meta", {})
         report_base_url = meta.get("report_base_url", None)
         secret_key = meta.get("secret_key", None)
         environment = meta.get("environment", "ripe-core-sbx")
         if report_base_url and secret_key:
-            report_url = "%s/api/orders/%d/report?environment=%s&key=%s" %\
-                (report_base_url, order["number"], environment, secret_key)
-            ripe_api.update_report_url_order(
+            report_url = "%s/api/orders/%d/report?environment=%s&key=%s" % (
+                report_base_url,
                 order["number"],
-                report_url
+                environment,
+                secret_key,
             )
+            ripe_api.update_report_url_order(order["number"], report_url)
 
     def _handle_exception(self, exception):
         print("Exception - %s" % str(exception))
+
 
 if __name__ == "__main__":
     marinator = Marinator()
