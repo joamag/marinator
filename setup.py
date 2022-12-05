@@ -12,7 +12,7 @@ setuptools.setup(
     description="The power of a Marina for everyone",
     license="Apache License, Version 2.0",
     keywords="ripe api",
-    url="http://joao.me",
+    url="https://github.com/joamag/marinator",
     zip_safe=False,
     packages=["marinator"],
     package_dir={"": os.path.normpath("src")},
