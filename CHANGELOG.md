@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+*
+
+## [0.2.5] - 2020-12-05
+
+### Fixed
+
 * Problem with GitHub ACtions, old Python versions and black
 
 ## [0.2.4] - 2020-12-05
