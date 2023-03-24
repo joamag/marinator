@@ -4,7 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>appier</project>
-		<project>appier_console</project>
+		<project>appier-console</project>
 		<project>ripe-api</project>
 	</projects>
 	<buildSpec>
