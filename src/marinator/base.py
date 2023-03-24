@@ -84,7 +84,7 @@ class Marinator(object):
 
             # builds the complete set of dimensions permutations from the
             # list of dimensions and then adds the "special" empty case
-            # to the beggining of the sequence
+            # to the beginning of the sequence
             dimensions_p = list(itertools.product(*dimensions_l))
             dimensions_p.insert(0, None)
 
